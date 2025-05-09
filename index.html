@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic Tac Toe</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>Sliding Tic Tac Toe</h1>
+        <p class="info-text glass-panel">
+            Play with a twist! When you place your 3rd mark, your oldest mark disappears.
+            Be strategic about placement to win!
+        </p>
+
+        <div id="game-setup" class="glass-panel">
+            <h2>Game Mode</h2>
+            <div class="game-options">
+                <button id="vs-player" class="btn mode-btn active">Player vs Player</button>
+                <button id="vs-computer" class="btn mode-btn">Player vs Computer</button>
+            </div>
+            <button id="start-game" class="btn start-btn">Start Game</button>
+        </div>
+
+        <div id="game-board" class="glass-panel" style="display: none;">
+            <div class="board" id="board">
+                <div class="cell" data-index="0"></div>
+                <div class="cell" data-index="1"></div>
+                <div class="cell" data-index="2"></div>
+                <div class="cell" data-index="3"></div>
+                <div class="cell" data-index="4"></div>
+                <div class="cell" data-index="5"></div>
+                <div class="cell" data-index="6"></div>
+                <div class="cell" data-index="7"></div>
+                <div class="cell" data-index="8"></div>
+            </div>
+
+            <div class="status" id="status">X's turn</div>
+
+            <div class="moves-container">
+                <div class="moves">
+                    <div class="moves-title">X Marks</div>
+                    <div id="x-count" class="move-count">0/2</div>
+                </div>
+                <div class="moves">
+                    <div class="moves-title">O Marks</div>
+                    <div id="o-count" class="move-count o">0/2</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="reset" class="btn">New Game</button>
+            <label class="theme-switch">
+                <input type="checkbox" id="theme-toggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
