@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const vsPlayerBtn = document.getElementById('vs-player');
     const vsComputerBtn = document.getElementById('vs-computer');
     const startGameBtn = document.getElementById('start-game');
+    const backBtn = document.createElement('button');
+    backBtn.id = 'back-btn';
+    backBtn.className = 'btn';
+    backBtn.textContent = 'Back to Menu';
 
     let currentPlayer = 'x';
     let gameActive = true;
@@ -18,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let againstComputer = false;
     let gameStarted = false;
     let gameOver = false;
+    let playerSymbol = 'x'; // Default player symbol
 
     // Track player moves in order
     let xMoves = [];
@@ -35,12 +40,49 @@ document.addEventListener('DOMContentLoaded', () => {
         vsPlayerBtn.classList.add('active');
         vsComputerBtn.classList.remove('active');
         againstComputer = false;
+
+        // Hide symbol selection if it exists
+        const symbolSelectionContainer = document.getElementById('symbol-selection');
+        if (symbolSelectionContainer) {
+            symbolSelectionContainer.style.display = 'none';
+        }
     });
 
     vsComputerBtn.addEventListener('click', () => {
         vsComputerBtn.classList.add('active');
         vsPlayerBtn.classList.remove('active');
         againstComputer = true;
+
+        // Create symbol selection container if it doesn't exist
+        let symbolSelectionContainer = document.getElementById('symbol-selection');
+        if (!symbolSelectionContainer) {
+            symbolSelectionContainer = document.createElement('div');
+            symbolSelectionContainer.id = 'symbol-selection';
+            symbolSelectionContainer.className = 'game-options';
+            symbolSelectionContainer.innerHTML = `
+                <h3>Choose your symbol:</h3>
+                <div class="symbol-options">
+                    <button id="choose-x" class="btn mode-btn active">Play as X (First)</button>
+                    <button id="choose-o" class="btn mode-btn">Play as O (Second)</button>
+                </div>
+            `;
+            gameSetup.insertBefore(symbolSelectionContainer, startGameBtn);
+
+            // Add event listeners for symbol selection
+            document.getElementById('choose-x').addEventListener('click', () => {
+                document.getElementById('choose-x').classList.add('active');
+                document.getElementById('choose-o').classList.remove('active');
+                playerSymbol = 'x';
+            });
+
+            document.getElementById('choose-o').addEventListener('click', () => {
+                document.getElementById('choose-o').classList.add('active');
+                document.getElementById('choose-x').classList.remove('active');
+                playerSymbol = 'o';
+            });
+        } else {
+            symbolSelectionContainer.style.display = 'block';
+        }
     });
 
     startGameBtn.addEventListener('click', () => {
@@ -48,6 +90,25 @@ document.addEventListener('DOMContentLoaded', () => {
         gameBoard.style.display = 'block';
         gameStarted = true;
         resetGame();
+
+        // Add back button to controls if it's not already there
+        const controls = document.querySelector('.controls');
+        if (!document.getElementById('back-btn')) {
+            controls.insertBefore(backBtn, resetBtn);
+        }
+    });
+
+    // Back button event listener
+    backBtn.addEventListener('click', () => {
+        gameBoard.style.display = 'none';
+        gameSetup.style.display = 'block';
+        gameStarted = false;
+        resetGame();
+
+        // Remove back button
+        if (backBtn.parentNode) {
+            backBtn.parentNode.removeChild(backBtn);
+        }
     });
 
     // Cell click handler
@@ -62,11 +123,16 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // In computer mode, only allow clicks if it's the player's turn
+        if (againstComputer && currentPlayer !== playerSymbol) {
+            return;
+        }
+
         // Handle the move
         handlePlayerMove(clickedCellIndex);
 
         // If playing against computer and no win/draw yet, make computer move
-        if (againstComputer && gameActive && currentPlayer === 'o') {
+        if (againstComputer && gameActive && currentPlayer !== playerSymbol) {
             setTimeout(() => {
                 makeComputerMove();
             }, 700);
@@ -87,10 +153,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update UI
         cells[cellIndex].classList.add(currentPlayer);
         updateMovesDisplay();
-        
+
         // Check for win or draw before potentially removing oldest mark
         const gameResult = checkGameResult();
-        
+
         // Only remove oldest mark if no win occurred and player has more than 2 marks
         if (!gameOver) {
             if (currentPlayer === 'x' && xMoves.length > 2) {
@@ -130,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     checkGameResult(); // Check again after removal
                 }, 500);
             }
-            
+
             // Switch player if game is still active
             if (gameActive) {
                 currentPlayer = currentPlayer === 'x' ? 'o' : 'x';
@@ -143,15 +209,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const makeComputerMove = () => {
         if (!gameActive) return;
 
+        const computerSymbol = playerSymbol === 'x' ? 'o' : 'x';
+
         // First try to win
-        const winMove = findBestMove('o');
+        const winMove = findBestMove(computerSymbol);
         if (winMove !== -1) {
             handlePlayerMove(winMove);
             return;
         }
 
         // Then try to block
-        const blockMove = findBestMove('x');
+        const blockMove = findBestMove(playerSymbol);
         if (blockMove !== -1) {
             handlePlayerMove(blockMove);
             return;
@@ -272,8 +340,8 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStatus();
         updateMovesDisplay();
 
-        // If playing against computer as O, computer goes first
-        if (gameStarted && againstComputer && currentPlayer === 'o') {
+        // If playing against computer and player is O, computer goes first
+        if (gameStarted && againstComputer && playerSymbol === 'o') {
             setTimeout(() => {
                 makeComputerMove();
             }, 700);
@@ -296,8 +364,31 @@ document.addEventListener('DOMContentLoaded', () => {
             gameSetup.style.display = 'block';
             gameBoard.style.display = 'none';
             gameStarted = false;
+
+            // Remove back button if present
+            if (document.getElementById('back-btn') && document.getElementById('back-btn').parentNode) {
+                document.getElementById('back-btn').parentNode.removeChild(document.getElementById('back-btn'));
+            }
         }
     });
 
     themeToggle.addEventListener('change', toggleTheme);
+
+    // Add some CSS style for the symbol selection
+    const style = document.createElement('style');
+    style.textContent = `
+        #symbol-selection {
+            margin-top: 1rem;
+        }
+        .symbol-options {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+        #back-btn {
+            margin-right: 1rem;
+        }
+    `;
+    document.head.appendChild(style);
 });
