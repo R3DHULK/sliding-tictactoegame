@@ -65,9 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // Handle the move
         handlePlayerMove(clickedCellIndex);
 
-        // Check for win or draw
-        const gameResult = checkGameResult();
-
         // If playing against computer and no win/draw yet, make computer move
         if (againstComputer && gameActive && currentPlayer === 'o') {
             setTimeout(() => {
@@ -83,7 +80,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // Add move to player's moves array
         if (currentPlayer === 'x') {
             xMoves.push(cellIndex);
-            if (xMoves.length > 2 && !gameOver) {
+        } else {
+            oMoves.push(cellIndex);
+        }
+
+        // Update UI
+        cells[cellIndex].classList.add(currentPlayer);
+        updateMovesDisplay();
+        
+        // Check for win or draw before potentially removing oldest mark
+        const gameResult = checkGameResult();
+        
+        // Only remove oldest mark if no win occurred and player has more than 2 marks
+        if (!gameOver) {
+            if (currentPlayer === 'x' && xMoves.length > 2) {
                 // Remove oldest X mark
                 const oldestCell = document.querySelector(`.cell[data-index="${xMoves[0]}"]`);
                 oldestCell.classList.add('fade-out');
@@ -99,12 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     xMoves.shift();
                     updateMovesDisplay();
-                    checkGameResult();
+                    checkGameResult(); // Check again after removal
                 }, 500);
-            }
-        } else {
-            oMoves.push(cellIndex);
-            if (oMoves.length > 2 && !gameOver) {
+            } else if (currentPlayer === 'o' && oMoves.length > 2) {
                 // Remove oldest O mark
                 const oldestCell = document.querySelector(`.cell[data-index="${oMoves[0]}"]`);
                 oldestCell.classList.add('fade-out');
@@ -120,18 +127,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     oMoves.shift();
                     updateMovesDisplay();
-                    checkGameResult();
+                    checkGameResult(); // Check again after removal
                 }, 500);
             }
+            
+            // Switch player if game is still active
+            if (gameActive) {
+                currentPlayer = currentPlayer === 'x' ? 'o' : 'x';
+                updateStatus();
+            }
         }
-
-        // Update UI
-        cells[cellIndex].classList.add(currentPlayer);
-        updateMovesDisplay();
-
-        // Switch player
-        currentPlayer = currentPlayer === 'x' ? 'o' : 'x';
-        updateStatus();
     };
 
     // Computer move
@@ -234,15 +239,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 cells[index].classList.add('winning');
             });
 
-            // Don't remove first X or O if there's a win
-            xMoves = [];
-            oMoves = [];
-
             return true;
         }
 
-        // Check for draw (this is tricky with our sliding window logic)
-        // We'll consider it a draw if the board is full and no one has won after checking
+        // Check for draw
         const fullBoard = !gameState.includes('');
         if (fullBoard && xMoves.length === 2 && oMoves.length === 2) {
             status.textContent = "It's a draw!";
